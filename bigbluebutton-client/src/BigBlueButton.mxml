@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  BigBlueButton open source conferencing system - http://www.bigbluebutton.org
+  
+  Copyright (c) 2010 BigBlueButton Inc. and by respective authors (see below).
+  
+  BigBlueButton is free software; you can redistribute it and/or modify it under the 
+  terms of the GNU Lesser General Public License as published by the Free Software 
+  Foundation; either version 2.1 of the License, or (at your option) any later 
+  version. 
+  
+  BigBlueButton is distributed in the hope that it will be useful, but WITHOUT ANY 
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+  PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+  
+  You should have received a copy of the GNU Lesser General Public License along 
+  with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
+ 
+  $Id: $
+-->
+
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:views="org.bigbluebutton.main.views.*"
+	xmlns:maps="org.bigbluebutton.main.maps.*"
+	xmlns:mate="http://mate.asfusion.com/"
+	pageTitle="BigBlueButton"
+	layout="absolute"
+	preloader="org.bigbluebutton.main.model.BigBlueButtonPreloader">
+	
+	<mx:Script>
+		<![CDATA[
+		import mx.managers.HistoryManager;
+		
+		import org.bigbluebutton.main.views.MainApplicationShell;
+		import org.bigbluebutton.util.i18n.ResourceUtil;
+		
+		private var langResources:ResourceUtil = ResourceUtil.getInstance();
+			
+		/**
+		 * Thse two lines are workaround for this. (ralam - Nov 8, 2008)
+		 * http://gregjessup.com/flex-3-advanceddatagrid-cannot-convert-mxmanagersdragmanagerimpl-to-mxmanagersidragmanager/
+		 * http://butterfliesandbugs.wordpress.com/2007/10/25/workaround-for-error-when-loading-popups-from-modules/
+		 */
+		import mx.managers.IDragManager; 
+		private var iDragManager:IDragManager;  
+
+		/** another workaround - for this issue: https://bugs.adobe.com/jira/browse/SDK-13121*/
+		private var hist:HistoryManager
+
+		private function handleChatEvent(e:Event):void {
+			trace('Got CHAT_EVENT');
+		}
+
+		]]>
+	</mx:Script>		
+	<maps:ApplicationEventMap />	
+	
+	<views:MainApplicationShell id="mainShell"/>	
+</mx:Application>

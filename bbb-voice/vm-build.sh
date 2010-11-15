@@ -1,0 +1,1 @@
+gradle resolveDependencies war deploy

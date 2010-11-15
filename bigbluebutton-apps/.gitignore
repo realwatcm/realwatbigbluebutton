@@ -1,0 +1,9 @@
+.classpath
+.project
+.settings
+build
+lib
+bin
+.scala_dependencies
+.manager
+.gradle

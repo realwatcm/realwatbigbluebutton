@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  BigBlueButton open source conferencing system - http://www.bigbluebutton.org
+  
+  Copyright (c) 2010 BigBlueButton Inc. and by respective authors (see below).
+  
+  BigBlueButton is free software; you can redistribute it and/or modify it under the 
+  terms of the GNU Lesser General Public License as published by the Free Software 
+  Foundation; either version 2.1 of the License, or (at your option) any later 
+  version. 
+  
+  BigBlueButton is distributed in the hope that it will be useful, but WITHOUT ANY 
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+  PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+  
+  You should have received a copy of the GNU Lesser General Public License along 
+  with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
+ 
+  $Id: $
+-->
+
+<mx:ApplicationControlBar xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:mate="http://mate.asfusion.com/"
+	enabled="true" xmlns:views="org.bigbluebutton.main.views.*" >   
+	
+	<mate:Listener type="{ToolbarButtonEvent.ADD}" method="handleAddToolbarButtonEvent" />	
+	<mate:Listener type="{ToolbarButtonEvent.REMOVE}" method="handleRemoveToolbarButtonEvent"/>
+	<mate:Listener type="{BBBEvent.END_MEETING_EVENT}" method="handleEndMeetingEvent"/>
+	<mate:Listener type="{ConnectionFailedEvent.USER_LOGGED_OUT}" method="hideToolbar" />
+	<mate:Listener type="{SuccessfulLoginEvent.USER_LOGGED_IN}" method="loginSuccess" />
+	<mate:Listener type="{ConfigEvent.CONFIG_EVENT}" method="gotConfigParameters" />
+	
+	<mx:Script>
+		<![CDATA[
+			import org.bigbluebutton.common.LogUtil;
+			import com.asfusion.mate.events.Dispatcher;
+			
+			import mx.controls.Alert;
+			
+			import org.bigbluebutton.main.events.BBBEvent;
+			import org.bigbluebutton.main.events.CloseWindowEvent;
+			import org.bigbluebutton.main.events.ConfigEvent;
+			import org.bigbluebutton.main.events.LogoutEvent;
+			import org.bigbluebutton.main.events.SuccessfulLoginEvent;
+			import org.bigbluebutton.main.events.ToolbarButtonEvent;
+			import org.bigbluebutton.main.model.users.events.ConnectionFailedEvent;
+			import org.bigbluebutton.util.i18n.ResourceUtil;
+
+			private var DEFAULT_HELP_URL:String = "http://www.bigbluebutton.org/content/videos";
+			
+			public function loggedIn(name:String, room:String, role:String):void{
+				this.visible = true;
+			}
+			
+			public function addButton(name:String):Button{
+				var btn:Button = new Button();
+				btn.id = name;
+				btn.label = name;
+				btn.height = 20;
+				btn.visible = true;
+				this.addChild(btn);
+				
+				return btn;
+			}
+			
+			private function onHelpButtonClicked():void {
+				navigateToURL(new URLRequest(DEFAULT_HELP_URL))
+			}
+			
+			private function handleEndMeetingEvent(event:BBBEvent):void {
+				LogUtil.debug("Received end meeting event.");
+				doLogout();
+			}
+			
+			private function doLogout():void {
+				dispatchEvent(new LogoutEvent(LogoutEvent.USER_LOGGED_OUT));
+			}
+			
+			private function hideToolbar(e:ConnectionFailedEvent):void{
+				this.visible = false;
+			}
+			
+			private function handleAddToolbarButtonEvent(event:ToolbarButtonEvent):void {
+				addedBtns.addChild(event.button);
+			}
+			
+			private function handleRemoveToolbarButtonEvent(event:ToolbarButtonEvent):void {
+				addedBtns.removeChild(event.button);
+			}
+			
+			private function loginSuccess(e:SuccessfulLoginEvent):void{
+				loggedIn(e.conferenceParameters.username, e.conferenceParameters.room, e.conferenceParameters.role);
+				visible = true;
+			}
+			
+			private function gotConfigParameters(e:ConfigEvent):void{
+				langSelector.visible = e.config.languageEnabled;
+				DEFAULT_HELP_URL = e.config.helpURL;
+			}
+			
+			private function onDisconnectTest():void{
+				var d:Dispatcher = new Dispatcher();
+				var e:LogoutEvent = new LogoutEvent(LogoutEvent.DISCONNECT_TEST);
+				d.dispatchEvent(e);
+			}
+			
+		]]>
+	</mx:Script>	
+	<mx:HBox id="addedBtns">
+	</mx:HBox>		
+	<mx:Spacer width="100%"/>
+	<views:LanguageSelector id="langSelector" visible="false" />
+	<mx:LinkButton label="{ResourceUtil.getInstance().getString('bbb.mainToolbar.helpBtn')}" click="onHelpButtonClicked()"/>
+	<mx:Button label="{ResourceUtil.getInstance().getString('bbb.mainToolbar.logoutBtn')}" id="btnLogout" 
+			   toolTip="{ResourceUtil.getInstance().getString('bbb.mainToolbar.logoutBtn.toolTip')}" right="10" click="doLogout()"/>
+</mx:ApplicationControlBar>

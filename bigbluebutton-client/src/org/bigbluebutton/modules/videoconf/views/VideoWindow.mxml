@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  BigBlueButton open source conferencing system - http://www.bigbluebutton.org
+  
+  Copyright (c) 2010 BigBlueButton Inc. and by respective authors (see below).
+  
+  BigBlueButton is free software; you can redistribute it and/or modify it under the 
+  terms of the GNU Lesser General Public License as published by the Free Software 
+  Foundation; either version 2.1 of the License, or (at your option) any later 
+  version. 
+  
+  BigBlueButton is distributed in the hope that it will be useful, but WITHOUT ANY 
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+  PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+  
+  You should have received a copy of the GNU Lesser General Public License along 
+  with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
+ 
+  $Id: $
+-->
+
+<MDIWindow xmlns="flexlib.mdi.containers.*" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	creationComplete="init()" 
+	implements="org.bigbluebutton.common.IBbbModuleWindow"
+	resizable="true" xmlns:mate="http://mate.asfusion.com/">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.events.Dispatcher;
+			
+			import flexlib.mdi.events.MDIWindowEvent;
+			
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			
+			import org.bigbluebutton.common.LogUtil;
+			import org.bigbluebutton.main.events.BBBEvent;
+			import org.bigbluebutton.main.views.MainCanvas;
+			import org.bigbluebutton.modules.videoconf.events.CloseAllWindowsEvent;
+		
+			private var video:Video;
+			private var ns:NetStream;
+			private var videoHolder:UIComponent;
+			private var stream:String;
+			private var videoHeight:Number;
+			private var videoWidth:Number;
+
+			private var _maxWidth:int = 800;
+			private var _maxHeight:int = 800;
+			private var _minWidth:int = 60;
+			private var _minHeight:int = 60;
+			private var _bResizePossible:Boolean = true;
+			private var _nAspectRatio:Number = 1;
+							
+			private var _xPosition:int;
+			private var _yPosition:int;
+			
+			private var globalDispatcher:Dispatcher;
+			
+			private function init():void{
+				videoHolder = new UIComponent();
+				videoHolder.addChild(video);
+				this.addChild(videoHolder);
+				maximizeRestoreBtn.visible = false;
+				addEventListener(MDIWindowEvent.RESIZE_END, onResizeEndEvent);
+				addEventListener(MDIWindowEvent.RESIZE, onResizeEvent);
+				addEventListener(MDIWindowEvent.CLOSE, onCloseEvent);
+				
+				globalDispatcher = new Dispatcher();
+			}
+			
+			private function onCloseEvent(event:MDIWindowEvent = null):void {
+				LogUtil.debug("ViewWindow closing " + stream);
+				var bbbEvt:BBBEvent = new BBBEvent("ViewVideoCloseEvent");
+				bbbEvt.message = stream;
+				dispatchEvent(bbbEvt);
+			}
+			
+			public function startVideo(connection:NetConnection, stream:String):void{
+				ns = new NetStream(connection);
+				ns.addEventListener( NetStatusEvent.NET_STATUS, onNetStatus );
+				ns.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onAsyncError);
+				ns.client = this;
+				ns.bufferTime = 0;
+				ns.receiveVideo(true);
+				ns.receiveAudio(false);
+				
+				setVideoResolution(stream);
+				video = new Video(this.width, this.height);
+				video.width = this.width;
+				video.height = this.height;
+				video.attachNetStream(ns);
+				ns.play(stream);	
+				
+				this.width = video.width + 6;
+				this.height = video.height + 29;
+				this.stream = stream;
+			}
+			
+			private function setVideoResolution(stream:String):void{
+				var resString:String = stream.substr(0, 7);
+				switch(resString){
+					case "320x240":
+						this.width = 320;
+						this.height = 240;
+						_nAspectRatio = (this.width/this.height)
+						break;
+					case "640x480":
+						this.width = 640;
+						this.height = 480;
+						_nAspectRatio = (this.width/this.height);
+						break;
+				}
+			}
+			
+			private function onAsyncError(e:AsyncErrorEvent):void{
+				LogUtil.debug("VIdeoWindow::asyncerror " + e.toString());
+			}
+			
+			public function onMetaData(info:Object):void{
+				LogUtil.debug("metadata: width=" + info.width + " height=" + info.height);
+				videoHolder.width = info.width;
+				videoHolder.height = info.height;
+			}
+			
+			public function getPrefferedPosition():String{
+				return MainCanvas.POPUP;
+			}
+			
+			private function onNetStatus(e:NetStatusEvent):void{
+				switch(e.info.code){
+					case "NetStream.Publish.Start":
+						LogUtil.debug("NetStream.Publish.Start for broadcast stream " + stream);
+						break;
+					case "NetStream.Play.UnpublishNotify":
+						ns.close();
+						this.close();
+						break;
+					case "NetStream.Play.Start":
+						LogUtil.debug("Netstatus: " + e.info.code);
+						globalDispatcher.dispatchEvent(new BBBEvent(BBBEvent.VIDEO_STARTED));
+				}
+			}
+			
+			override public function close(event:MouseEvent=null):void{
+				ns.close();
+				//onCloseEvent();
+				super.close(event);
+			}		
+			
+			private function closeWindow(e:CloseAllWindowsEvent):void{
+				this.close();
+			}
+			
+			public function onResizeEndEvent(event:MDIWindowEvent):void {
+				// make sure the height of the window is correct
+				if ( video.height + 29 > this.height) {
+					this.height = video.height + 29;
+				} 
+			}
+					
+			public function onResizeEvent(event:Event):void {
+				// test if we are already resizing
+				if (_bResizePossible) {
+					_bResizePossible = false;
+					resizeWindow();
+					_bResizePossible = true;
+				}
+			}
+
+			private function resizeWindow():void {
+				if (this.width > _maxWidth) {
+					this.width = _maxWidth;
+				}
+				if (this.height > _maxHeight) {
+					this.height = _maxHeight;
+				}
+				if (this.height < _minHeight) {
+					this.height = _minHeight;
+				}
+				if (this.width < _minWidth) {
+					this.width = _minWidth;
+				}
+				// recalc size of video based on the width and height of the window
+				video.width = this.width - 6;
+				// make sure the video has a correct aspectratio to avoid tall or flat faces
+				video.height  = Math.floor (video.width / _nAspectRatio);
+				this.height = video.height + 29;
+				
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mate:Listener type="{CloseAllWindowsEvent.CLOSE_ALL_WINDOWS}" method="closeWindow" />
+</MDIWindow>

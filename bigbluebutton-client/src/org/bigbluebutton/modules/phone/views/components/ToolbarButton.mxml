@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  BigBlueButton open source conferencing system - http://www.bigbluebutton.org
+  
+  Copyright (c) 2010 BigBlueButton Inc. and by respective authors (see below).
+  
+  BigBlueButton is free software; you can redistribute it and/or modify it under the 
+  terms of the GNU Lesser General Public License as published by the Free Software 
+  Foundation; either version 2.1 of the License, or (at your option) any later 
+  version. 
+  
+  BigBlueButton is distributed in the hope that it will be useful, but WITHOUT ANY 
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+  PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+  
+  You should have received a copy of the GNU Lesser General Public License along 
+  with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
+ 
+  $Id: $
+-->
+
+<mx:Button xmlns:mx="http://www.adobe.com/2006/mxml"
+	icon="{phoneIcon}" click="startPhone()"
+	xmlns:mate="http://mate.asfusion.com/"
+	toolTip="{ResourceUtil.getInstance().getString('bbb.toolbar.phone.toolTip')}">
+	
+	<mate:Listener type="{CallConnectedEvent.CALL_CONNECTED_EVENT}" method="handleCallConnectedEvent"/>
+	<mate:Listener type="{CallDisconnectedEvent.CALL_DISCONNECTED_EVENT}" method="handleCallDisconnectedEvent"/>
+	<mate:Listener type="{BBBEvent.JOIN_VOICE_CONFERENCE}" method="handleBBBJoinConferenceEvent"/>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.asfusion.mate.events.Dispatcher;
+			
+			import org.bigbluebutton.common.LogUtil;
+			import org.bigbluebutton.main.events.BBBEvent;
+			import org.bigbluebutton.modules.phone.events.CallConnectedEvent;
+			import org.bigbluebutton.modules.phone.events.CallDisconnectedEvent;
+			import org.bigbluebutton.modules.phone.events.JoinVoiceConferenceEvent;
+			import org.bigbluebutton.modules.phone.events.LeaveVoiceConferenceEvent;
+			import org.bigbluebutton.modules.phone.views.assets.Images;
+			import org.bigbluebutton.util.i18n.ResourceUtil;
+			
+			private var images:Images = new Images();
+			private var dispatcher:Dispatcher = new Dispatcher();
+			 
+			[Bindable] public var phoneIcon:Class = images.headset_icon;
+			
+			private function startPhone():void {
+				//this.enabled = false;
+				if (this.selected) {
+					LogUtil.debug("Joining voice conference");
+					dispatcher.dispatchEvent(new JoinVoiceConferenceEvent());					
+				} else {
+					LogUtil.debug("Leaving voice conference");
+					dispatcher.dispatchEvent(new LeaveVoiceConferenceEvent());
+				}
+				
+				this.enabled = false;
+				var t:Timer = new Timer(3000, 1);
+				t.addEventListener(TimerEvent.TIMER, onTimer);
+				t.start();
+			}
+			
+			private function onTimer(e:TimerEvent):void{
+				this.enabled = true;
+			}
+			
+			private function handleCallConnectedEvent(event:CallConnectedEvent):void {
+				//this.enabled = false;
+			}
+			
+			private function handleCallDisconnectedEvent(event:CallDisconnectedEvent):void {
+				//this.enabled = true;
+				this.selected = false;
+			}
+			
+			private function handleBBBJoinConferenceEvent(event:BBBEvent):void {
+				var e:JoinVoiceConferenceEvent = new JoinVoiceConferenceEvent();
+				e.useMicrophone = false;
+				dispatcher.dispatchEvent(e);
+			}
+			
+			//For whatever reason the tooltip does not update when localization is changed dynamically. Overrideing it here
+			override protected function resourcesChanged():void{
+				this.toolTip = ResourceUtil.getInstance().getString('bbb.toolbar.phone.toolTip');
+			}
+		]]>
+	</mx:Script>
+</mx:Button>

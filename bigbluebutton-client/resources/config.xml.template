@@ -1,0 +1,81 @@
+<?xml version="1.0" ?>
+<config>
+    <localeversion>0.71</localeversion>
+    <version>VERSION</version>
+    <help url="http://HOST/help.html"/>
+    <porttest host="HOST" application="video"/>    
+    <application uri="rtmp://HOST/bigbluebutton" host="http://HOST/bigbluebutton/api/enter" />
+    <language userSelectionEnabled="true" />
+    <skinning enabled="false" url="branding/css/theme.swf" />
+    <debug showDebugWindow="false" />
+    
+	<modules>
+
+		<module name="ChatModule" url="ChatModule.swf?v=VERSION" 
+			uri="rtmp://HOST/bigbluebutton" 
+			dependsOn="ViewersModule"	
+			translationOn="true"
+			translationEnabled="true"	 
+		/>
+		
+		<module name="ViewersModule" url="ViewersModule.swf?v=VERSION" 
+			uri="rtmp://HOST/bigbluebutton" 
+			host="http://HOST/bigbluebutton/api/enter"
+			allowKickUser="false"
+		/>
+			
+		<module name="ListenersModule" url="ListenersModule.swf?v=VERSION" 
+			uri="rtmp://HOST/bigbluebutton" 
+			recordingHost="http://HOST"
+		/>
+		
+		<module name="DeskShareModule" 
+			url="DeskShareModule.swf?v=VERSION" 
+			uri="rtmp://HOST/deskShare"
+		/>
+		
+		<module name="PhoneModule" url="PhoneModule.swf?v=VERSION" 
+			uri="rtmp://HOST/sip" 
+			dependsOn="ViewersModule"
+		/>
+		
+		<module name="VideoconfModule" url="VideoconfModule.swf?v=VERSION" 
+			uri="rtmp://HOST/video"
+			dependsOn="ViewersModule"
+			videoQuality="70"
+			presenterShareOnly="false"
+		/>
+		
+		<module name="WhiteboardModule" url="WhiteboardModule.swf?v=VERSION" 
+			uri="rtmp://HOST/bigbluebutton" 
+			dependsOn="PresentModule"
+		/>
+		
+		<module name="PresentModule" url="PresentModule.swf?v=VERSION" 
+			uri="rtmp://HOST/bigbluebutton" 
+			host="http://HOST" 
+			dependsOn="ViewersModule"
+		/>
+
+		<!-- new module in development: 
+		<module name="DynamicInfoModule" url="DynamicInfoModule.swf?v=VERSION" 
+			uri="rtmp://HOST/bigbluebutton" 
+			host="http://HOST" 
+			infoURL="http://HOST/client/conf/example-info-data.xml?user={userID}&role={role}&meetingID={meetingID}"
+		/>
+		-->
+		
+		<!--<module name="ExampleChatModule" url="ExampleChatModule.swf?v=56" 
+            uri="rtmp://HOST/bigbluebutton" 
+            host="http://HOST"
+		/>-->
+		
+		<!--<module name="BreakoutModule" url="BreakoutModule.swf?v=VERSION" 
+			uri="rtmp://192.168.0.225/bigbluebutton" 
+			host="http://192.168.0.225" 
+			dependsOn="ViewersModule"
+			salt="1708e5ecf25b7142b06f2338b4ea3cf1"
+		/>-->
+		
+	</modules>
+</config>
